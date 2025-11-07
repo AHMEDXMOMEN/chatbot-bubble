@@ -7,8 +7,8 @@ export default async function handler(req, res) {
     }
 
     if (!process.env.OPENAI_API_KEY || !process.env.ASSISTANT_ID) {
-      return res.status(500).json({ 
-        error: "Missing environment variables. Make sure OPENAI_API_KEY and ASSISTANT_ID are set in Vercel." 
+      return res.status(500).json({
+        error: "Missing environment variables. Make sure OPENAI_API_KEY and ASSISTANT_ID are set in Vercel."
       });
     }
 
@@ -26,19 +26,16 @@ export default async function handler(req, res) {
       }
     );
 
-    // Parse JSON safely
-    const data = await response.json().catch(() => ({}));
+    const data = await response.json();
 
-    if (!response.ok) {
-      console.error("OpenAI API Error:", data);
-      return res.status(response.status).json({
-        error: "OpenAI API returned an error.",
-        details: data
-      });
-    }
+    // جرب نطبعها في اللوج عشان نشوف شكلها الحقيقي
+    console.log("OpenAI raw response:", JSON.stringify(data, null, 2));
 
+    // الرد ممكن يكون موجود في أماكن مختلفة حسب الـ API version
     const reply =
       data.output?.[0]?.content?.[0]?.text?.value ||
+      data.output_text ||
+      data.message ||
       "Sorry, I couldn’t get a response from the assistant.";
 
     res.status(200).json({ reply });
