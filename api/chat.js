@@ -1,78 +1,71 @@
+// api/chat.js
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY, // 🔒 من Vercel env
+});
+
 export default async function handler(req, res) {
-  const { message } = req.body;
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
   try {
-    // Step 1: Create a thread
-    const threadRes = await fetch("https://api.openai.com/v1/threads", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-      }
-    });
-    const thread = await threadRes.json();
+    const { message } = req.body;
+    const assistantId = process.env.ASSISTANT_ID;
 
-    // Step 2: Send the user's message to the thread
-    await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        role: "user",
-        content: message
-      })
-    });
-
-    // Step 3: Run the assistant on the thread
-    const runRes = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        assistant_id: process.env.ASSISTANT_ID
-      })
-    });
-
-    const run = await runRes.json();
-
-    // Step 4: Poll until the run completes
-    let completed = false;
-    let reply = "No response received.";
-    while (!completed) {
-      const checkRes = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs/${run.id}`, {
-        headers: {
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-        }
+    if (!assistantId || !process.env.OPENAI_API_KEY) {
+      return res.status(500).json({
+        error: "Missing environment variables (ASSISTANT_ID or OPENAI_API_KEY)",
       });
-      const check = await checkRes.json();
-
-      if (check.status === "completed") {
-        completed = true;
-        // Step 5: Get the assistant's reply
-        const messagesRes = await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
-          headers: {
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-          }
-        });
-        const messages = await messagesRes.json();
-        const assistantMessage = messages.data.find(m => m.role === "assistant");
-        reply = assistantMessage?.content?.[0]?.text?.value || "No reply text.";
-      } else if (check.status === "failed") {
-        completed = true;
-        reply = "Assistant failed to respond.";
-      } else {
-        await new Promise(r => setTimeout(r, 1000)); // wait 1s before checking again
-      }
     }
 
-    res.status(200).json({ reply });
+    console.log("🧠 Incoming message:", message);
 
-  } catch (err) {
-    console.error("Error:", err);
-    res.status(500).json({ reply: "Error talking to the assistant." });
+    // 1️⃣ Create new thread
+    const thread = await client.beta.threads.create();
+    console.log("📎 Created thread:", thread.id);
+
+    // 2️⃣ Add user's message
+    await client.beta.threads.messages.create(thread.id, {
+      role: "user",
+      content: message,
+    });
+    console.log("💬 Message added to thread");
+
+    // 3️⃣ Run the assistant
+    const run = await client.beta.threads.runs.create(thread.id, {
+      assistant_id: assistantId,
+    });
+    console.log("🚀 Run started:", run.id);
+
+    // 4️⃣ Wait until run finishes
+    let status = "queued";
+    while (status !== "completed" && status !== "failed") {
+      await new Promise((r) => setTimeout(r, 1500));
+      const check = await client.beta.threads.runs.retrieve(thread.id, run.id);
+      status = check.status;
+      console.log("⏳ Run status:", status);
+    }
+
+    // 5️⃣ Get assistant messages
+    const messages = await client.beta.threads.messages.list(thread.id);
+    const assistantMessage = messages.data.find(
+      (msg) => msg.role === "assistant"
+    );
+
+    const reply =
+      assistantMessage?.content?.[0]?.text?.value ||
+      "⚠️ No response received from assistant.";
+
+    console.log("✅ Assistant reply:", reply);
+
+    res.status(200).json({ reply });
+  } catch (error) {
+    console.error("❌ Error:", error);
+    res.status(500).json({
+      error: error.message || "Something went wrong",
+      details: error.response ? await error.response.json() : null,
+    });
   }
 }
