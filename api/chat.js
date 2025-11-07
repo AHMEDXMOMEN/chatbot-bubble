@@ -37,6 +37,7 @@ export default async function handler(req, res) {
       data.output_text ||
       data.message ||
       "Sorry, I couldn’t get a response from the assistant.";
+    console.log("🔍 Full Response from API:", JSON.stringify(data, null, 2));
 
     res.status(200).json({ reply });
   } catch (err) {
