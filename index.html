@@ -1,116 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chatbot Bubble</title>
-    <style>
-      .chat-bubble {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background-color: #0078ff;
-        color: white;
-        border-radius: 50%;
-        width: 60px;
-        height: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 30px;
-        cursor: pointer;
-        box-shadow: 0px 4px 8px rgba(0,0,0,0.3);
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My GPT Assistant</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="chat-container">
+    <h1>💬 My GPT Assistant</h1>
+    <div id="chat-box" class="chat-box"></div>
+    <input type="text" id="user-input" placeholder="Type your message..." />
+    <button id="send-btn">Send</button>
+  </div>
 
-      .chat-box {
-        position: fixed;
-        bottom: 90px;
-        right: 20px;
-        width: 320px;
-        height: 400px;
-        background: white;
-        border: 1px solid #ccc;
-        border-radius: 15px;
-        box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
-        display: none;
-        flex-direction: column;
-        overflow: hidden;
-      }
-
-      .chat-header {
-        background: #0078ff;
-        color: white;
-        padding: 10px;
-        text-align: center;
-      }
-
-      .chat-messages {
-        flex: 1;
-        padding: 10px;
-        overflow-y: auto;
-        font-family: sans-serif;
-      }
-
-      .chat-input {
-        display: flex;
-        border-top: 1px solid #ccc;
-      }
-
-      .chat-input input {
-        flex: 1;
-        padding: 10px;
-        border: none;
-        outline: none;
-      }
-
-      .chat-input button {
-        background: #0078ff;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        cursor: pointer;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="chat-bubble" id="chatToggle">💬</div>
-
-    <div class="chat-box" id="chatBox">
-      <div class="chat-header">AI Assistant</div>
-      <div class="chat-messages" id="chatMessages"></div>
-      <div class="chat-input">
-        <input type="text" id="userInput" placeholder="Type your question..." />
-        <button onclick="sendMessage()">Send</button>
-      </div>
-    </div>
-
-    <script>
-      const bubble = document.getElementById("chatToggle");
-      const box = document.getElementById("chatBox");
-      const messages = document.getElementById("chatMessages");
-      const input = document.getElementById("userInput");
-
-      bubble.onclick = () => {
-        box.style.display = box.style.display === "flex" ? "none" : "flex";
-      };
-
-      async function sendMessage() {
-        const userText = input.value.trim();
-        if (!userText) return;
-
-        messages.innerHTML += `<div><b>You:</b> ${userText}</div>`;
-        input.value = "";
-
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: userText })
-        });
-
-        const data = await res.json();
-        messages.innerHTML += `<div><b>Bot:</b> ${data.reply}</div>`;
-        messages.scrollTop = messages.scrollHeight;
-      }
-    </script>
-  </body>
+  <script src="script.js"></script>
+</body>
 </html>

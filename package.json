@@ -1,0 +1,8 @@
+{
+  "name": "my-chatbot-interface",
+  "version": "1.0.0",
+  "scripts": {},
+  "dependencies": {
+    "openai": "^4.59.0"
+  }
+}

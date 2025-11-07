@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - CAG Prompt</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    // 🔐 Simple password protection
+    const password = prompt("Enter password to access admin:");
+    if (password !== "123") {
+      alert("Access denied!");
+      window.location.href = "index.html";
+    }
+  </script>
+</head>
+<body>
+  <nav>
+    <a href="index.html">Chat</a>
+    <a href="admin.html" class="active">Admin</a>
+    <a href="info.html">Info</a>
+  </nav>
+
+  <div class="admin-container">
+    <h2>🧠 Update CAG Prompt</h2>
+
+    <div class="a4-wrapper">
+      <div class="a4-page">
+        <textarea id="promptBox" placeholder="Write or paste your full CAG prompt here..."></textarea>
+      </div>
+    </div>
+
+    <button id="savePromptBtn">❤️ Save Prompt</button>
+    <p id="status"></p>
+  </div>
+
+  <script>
+    const promptBox = document.getElementById("promptBox");
+    const savedPrompt = localStorage.getItem("cag_prompt");
+    if (savedPrompt) promptBox.value = savedPrompt;
+
+    document.getElementById("savePromptBtn").addEventListener("click", () => {
+      const newPrompt = promptBox.value.trim();
+      if (!newPrompt) return alert("Please write something!");
+      localStorage.setItem("cag_prompt", newPrompt);
+      document.getElementById("status").textContent = "✅ Prompt saved successfully!";
+    });
+  </script>
+</body>
+</html>
