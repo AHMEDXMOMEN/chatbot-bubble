@@ -1,7 +1,8 @@
 {
-  "name": "my-chatbot-interface",
+  "name": "chatbot-bubble-api",
   "version": "1.0.0",
-  "scripts": {},
+  "main": "api/chat.js",
+  "type": "module",
   "dependencies": {
     "openai": "^4.59.0"
   }
